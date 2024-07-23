@@ -1,0 +1,4 @@
+*
+!Dockerfile
+!.m2-cached/
+# add more exceptions with files that should go inside docker
