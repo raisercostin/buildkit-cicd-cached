@@ -1,6 +1,23 @@
 # buildkit-cicd-cached
 
-## Solution pushing image (no --from-cache)
+## Solution4: using a mirror to a local dir
+
+mvn -s setting.xml
+
+```xml:settings.xml
+<settings>
+  <mirrors>
+    <mirror>
+      <id>local-mirror</id>
+      <mirrorOf>*</mirrorOf>
+      <!-- <mirrorOf>*,!repository</mirrorOf> with exceptions -->
+      <url>file:///C:/Users/raiser/.m2/repository</url>
+    </mirror>
+  </mirrors>
+</settings>
+```
+
+## Solution3: pushing image (no --from-cache)
 
 Exclude of .git is commented to allow mvn to execute. But normally .git copy should execute later to allow for caching (git is always changed)
 
@@ -10,7 +27,7 @@ printf '<project><modelVersion>4.0.0</modelVersion><groupId>org.raisercostin</gr
 printf '#syntax=docker/dockerfile:1.7-labs\nFROM myapp:latest \nCOPY --exclude=.git-commentedout/ --exclude=dump/ . /\nRUN ls -al&& ls -al /root/.m2||echo hm && mvn pl.project13.maven:git-commit-id-plugin:revision|| echo error ignored to allow cache && echo change to invalidate cache v5' | docker buildx build -f- . --output=type=image,name=myapp --tag=myapp:latest --progress=plain --cache-from=myapp:latest --output=type=local,dest=dump
 ```
 
-## Solution pushing build stage - best
+## Solution2: pushing build stage - best
 
 1. Create and push build-image: contains all intermediate .m2 files in image and use previous such build-image
 2. Create and push runtime-image: using the previous build-image
@@ -27,7 +44,7 @@ printf 'FROM myapp-build/myapp \nCOPY . /' | docker buildx build -f- -o context-
 docker images |grep myapp
 ```
 
-## Solution exporting intermediate stage
+## Solution1: exporting intermediate stage
 
 A template on how a cached CICD multistage buildkit docker project can be done.
 
